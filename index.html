@@ -28,6 +28,11 @@ body{background-color:#110720;background-image:radial-gradient(circle at 15% 15%
 .btn-continue:active{transform:scale(.98)}
 .btn-save-png{background:linear-gradient(90deg,#ff2a85,#d946ef);box-shadow:0 6px 24px rgba(255,42,133,.45)}
 .signature-pad{background:#120722;border:1.5px dashed #53308f;border-radius:14px;touch-action:none;cursor:crosshair}
+.role-switch{position:relative;display:grid;grid-template-columns:1fr 1fr;background:#160a2b;border:1.5px solid #45277a;border-radius:999px;padding:3px;box-shadow:inset 0 0 10px rgba(0,0,0,.45),0 0 12px rgba(139,92,246,.18)}
+.role-thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:999px;background:linear-gradient(135deg,#ff2a85,#9d4edd);box-shadow:0 0 14px rgba(255,42,133,.5);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+.role-switch[data-role="parent"] .role-thumb{transform:translateX(100%)}
+.role-opt{position:relative;z-index:1;min-width:64px;padding:5px 14px;border-radius:999px;font-size:11px;font-weight:800;line-height:1.4;color:#c4b5fd;transition:color .3s}
+.role-opt[aria-checked="true"]{color:#fff}
 .fade-in{animation:fadeIn .3s ease-out forwards}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 </style>
@@ -42,6 +47,13 @@ body{background-color:#110720;background-image:radial-gradient(circle at 15% 15%
     <div class="text-left leading-none select-none" dir="ltr">
       <div class="font-display text-base tracking-wider bg-gradient-to-r from-pink-500 via-purple-400 to-cyan-400 bg-clip-text text-transparent font-black">GTA VI GAMER CONTRACT</div>
       <div class="text-[9px] tracking-widest text-cyan-300/75 font-semibold text-right">VICE CITY EDITION</div>
+    </div>
+  </div>
+  <div class="max-w-lg mx-auto flex justify-start mt-2.5" dir="ltr">
+    <div id="roleSwitch" class="role-switch" role="radiogroup" aria-label="نسخه قرارداد" data-role="parent">
+      <span class="role-thumb" aria-hidden="true"></span>
+      <button type="button" role="radio" aria-checked="false" data-role="partner" onclick="setRole('پارتنر')" class="role-opt">پارتنر</button>
+      <button type="button" role="radio" aria-checked="true" data-role="parent" onclick="setRole('والد')" class="role-opt">والد</button>
     </div>
   </div>
 </header>
@@ -65,7 +77,7 @@ body{background-color:#110720;background-image:radial-gradient(circle at 15% 15%
         <input type="text" id="playerName" placeholder="مثلاً: آرمین" class="neon-input w-full rounded-2xl px-4 py-3.5 text-sm font-medium placeholder-purple-400/50">
       </div>
       <div>
-        <label for="parentName" class="block text-sm font-semibold text-purple-200 mb-2">اسم والد</label>
+        <label for="parentName" class="block text-sm font-semibold text-purple-200 mb-2">اسم <span class="role-txt">والد</span></label>
         <input type="text" id="parentName" placeholder="مثلاً: سارا" class="neon-input w-full rounded-2xl px-4 py-3.5 text-sm font-medium placeholder-purple-400/50">
       </div>
       <div>
@@ -107,7 +119,7 @@ body{background-color:#110720;background-image:radial-gradient(circle at 15% 15%
     <div id="playerRightsList" class="space-y-2.5"></div>
   </div>
   <div class="mb-5">
-    <div class="flex items-center gap-2 mb-3 px-1"><span class="w-1 h-5 rounded-full bg-pink-500 shadow-[0_0_8px_#ff2a85]"></span><h2 class="text-base font-extrabold text-white">تعهدات و قوانین والد</h2></div>
+    <div class="flex items-center gap-2 mb-3 px-1"><span class="w-1 h-5 rounded-full bg-pink-500 shadow-[0_0_8px_#ff2a85]"></span><h2 class="text-base font-extrabold text-white">تعهدات و قوانین <span class="role-txt">والد</span></h2></div>
     <div id="parentRulesList" class="space-y-2.5"></div>
   </div>
   <div id="customSection" class="mb-5 hidden">
@@ -146,7 +158,7 @@ body{background-color:#110720;background-image:radial-gradient(circle at 15% 15%
     </div>
     <div>
       <div class="flex items-center justify-between mb-2">
-        <span class="text-sm font-bold text-pink-400">امضای والد</span>
+        <span class="text-sm font-bold text-pink-400">امضای <span class="role-txt">والد</span></span>
         <span id="sigParentNameDisplay" class="text-xs font-semibold text-purple-200 bg-purple-950/80 px-3 py-1 rounded-full border border-purple-700/50">والد</span>
       </div>
       <div class="relative">
@@ -207,6 +219,15 @@ const RULES=[
  {t:'گفتگو، نه دعوا',d:'اختلاف‌ها با گفتگوی آرام و بدون دعوا حل می‌شود.'},
  {t:'اجازه‌ی خرید',d:'خرید درون‌بازی فقط با هماهنگی و قبل از پرداخت.'}
 ];
+let ROLE='والد';
+const rules=()=>RULES.map(c=>({t:c.t.replace(/والد/g,ROLE),d:c.d.replace(/والد/g,ROLE)}));
+function setRole(r){
+  ROLE=r;
+  document.querySelectorAll('.role-txt').forEach(e=>e.textContent=r);
+  const sw=$('roleSwitch');sw.dataset.role=r==='والد'?'parent':'partner';
+  sw.querySelectorAll('.role-opt').forEach(b=>b.setAttribute('aria-checked',b.dataset.role===sw.dataset.role));
+  renderClauses();
+}
 let custom=[], sel=new Set(), step=1, duration='۱۰ روز', isCustomDur=false;
 const $=id=>document.getElementById(id);
 const fa=n=>Number(n).toLocaleString('fa-IR');
@@ -228,13 +249,13 @@ function show(n){
 function goBack(){if(step>1)show(step-1)}
 function goToStep(n){
   if(n===2){
-    if(!$('playerName').value.trim()||!$('parentName').value.trim())return toast('اسم بازیکن و اسم والد را بنویس.');
+    if(!$('playerName').value.trim()||!$('parentName').value.trim())return toast('اسم بازیکن و اسم '+ROLE+' را بنویس.');
     if(isCustomDur&&!$('customDurationInput').value.trim())return toast('مدت دلخواه را بنویس.');
   }
   if(n===3){
     if(!sel.size)return toast('حداقل یک بند انتخاب کن.');
     $('sigPlayerNameDisplay').textContent=$('playerName').value.trim()||'بازیکن';
-    $('sigParentNameDisplay').textContent=$('parentName').value.trim()||'والد';
+    $('sigParentNameDisplay').textContent=$('parentName').value.trim()||ROLE;
     show(3);initSigs();return;
   }
   show(n);
@@ -263,7 +284,7 @@ function itemHTML(id,c){
 function esc(s){return s.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 function renderClauses(){
   $('playerRightsList').innerHTML=RIGHTS.map((c,i)=>itemHTML('r'+i,c)).join('');
-  $('parentRulesList').innerHTML=RULES.map((c,i)=>itemHTML('p'+i,c)).join('');
+  $('parentRulesList').innerHTML=rules().map((c,i)=>itemHTML('p'+i,c)).join('');
   $('customList').innerHTML=custom.map((c,i)=>itemHTML('c'+i,c)).join('');
   $('customSection').classList.toggle('hidden',!custom.length);
   $('selectedCountBadge').textContent=`${fa(sel.size)} بند از ${fa(allIds().length)} بند انتخاب شده`;
@@ -322,7 +343,7 @@ function layout(x,W,draw,data){
   x.fillStyle='#00f0ff';x.font='700 32px Vazirmatn,sans-serif';x.fillText('قرارداد رسمی بازی بدون دعوا',W/2,y);y+=30;
   if(draw){x.fillStyle='#45277a';x.fillRect(P,y,IW,3)}y+=50;
   x.textAlign='right';x.font='600 30px Vazirmatn,sans-serif';
-  [['بازیکن',data.player],['والد',data.parent],['مدت قرارداد',data.dur],['تاریخ',data.date]].forEach(([k,v])=>{
+  [['بازیکن',data.player],[ROLE,data.parent],['مدت قرارداد',data.dur],['تاریخ',data.date]].forEach(([k,v])=>{
     if(draw){x.fillStyle='#a78bfa';x.fillText(k+':',R,y);x.fillStyle='#fff';x.fillText(v,R-170,y)}y+=48;
   });
   y+=10;
@@ -337,7 +358,7 @@ function layout(x,W,draw,data){
   });
   y+=30;if(draw){x.fillStyle='#45277a';x.fillRect(P,y,IW,3)}y+=60;
   const bw=(IW-40)/2,bh=190;
-  [[R-bw,'امضای بازیکن',data.player,data.pImg,'#00f0ff'],[P,'امضای والد',data.parent,data.qImg,'#ff3b93']].forEach(([bx,lab,nm,img,col])=>{
+  [[R-bw,'امضای بازیکن',data.player,data.pImg,'#00f0ff'],[P,'امضای '+ROLE,data.parent,data.qImg,'#ff3b93']].forEach(([bx,lab,nm,img,col])=>{
     if(draw){
       x.textAlign='center';x.fillStyle=col;x.font='700 28px Vazirmatn,sans-serif';x.fillText(lab+' — '+nm,bx+bw/2,y);
       x.strokeStyle='#53308f';x.lineWidth=2;x.setLineDash([10,8]);x.strokeRect(bx,y+20,bw,bh);x.setLineDash([]);
@@ -358,7 +379,7 @@ async function generateAndDownloadContract(){
     pImg:pick('playerSigCanvas'),qImg:pick('parentSigCanvas'),
     sections:[
       {title:'حقوق بازیکن',color:'#00f0ff',items:lists(RIGHTS,'r')},
-      {title:'تعهدات و قوانین والد',color:'#ff3b93',items:lists(RULES,'p')},
+      {title:'تعهدات و قوانین '+ROLE,color:'#ff3b93',items:lists(rules(),'p')},
       {title:'بندهای دلخواه',color:'#f5c542',items:lists(custom,'c')}
     ]
   };
